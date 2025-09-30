@@ -43,7 +43,15 @@ private:
     }
     
     void clear_screen() {
-        for (int i = 0; i < 50; i++) {
+        // 嘗試多種清屏方式
+        std::cout << "\033[2J";      // 清除整個螢幕
+        std::cout << "\033[3J";      // 清除 scrollback buffer
+        std::cout << "\033[H";       // 移動游標到左上角
+        std::cout << "\033[0;0H";    // 另一種移動游標方式
+        std::cout << std::flush;
+        
+        // 如果上面都不行，用換行來推開舊內容
+        for (int i = 0; i < 3; i++) {
             std::cout << "\n";
         }
     }
@@ -97,20 +105,16 @@ public:
     
     void play() {
         while (true) {
-            std::cout << "[DEBUG] Waiting for message...\n";
             std::string msg = receive_message();
             if (msg.empty()) {
                 std::cout << "Connection lost\n";
                 break;
             }
             
-            std::cout << "[DEBUG] Received: " << msg.substr(0, 50) << "...\n";
-            
             std::vector<std::string> parts = split(msg, ':');
             if (parts.empty()) continue;
             
             std::string cmd = parts[0];
-            std::cout << "[DEBUG] Command: " << cmd << "\n";
             
             if (cmd == "WAIT") {
                 std::cout << parts[1] << "\n";

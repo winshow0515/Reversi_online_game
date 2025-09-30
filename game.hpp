@@ -17,7 +17,7 @@ private:
     const int dx[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
     const int dy[8] = {0, 0, -1, 1, -1, 1, -1, 1};
     
-    bool is_valid_pos(int row, int col) {//檢查是否超出邊界
+    bool is_valid_pos(int row, int col) {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
     }
     
@@ -33,11 +33,12 @@ private:
         }
         
         // 繼續往這個方向找
-        r += dx[dir]; c += dy[dir];
+        r += dx[dir];
+        c += dy[dir];
         
         while (is_valid_pos(r, c)) {
             if (board[r][c] == '*') {
-                return false;  // 遇到空格翻不了
+                return false;  // 遇到空格
             }
             if (board[r][c] == player) {
                 return true;  // 找到自己的棋子
@@ -152,15 +153,24 @@ public:
     }
     
     // 檢查遊戲是否結束
-    bool is_game_over() {//好像沒有程式用到這段func
+    bool is_game_over() {
         return !has_valid_moves('X') && !has_valid_moves('O');
     }
     
     // 顯示棋盤
     void print_board(const std::string& player_name, const std::string& opponent_name, 
                      char your_piece, bool is_your_turn) {
+        // ANSI 顏色代碼
+        const std::string RED = "\033[31m";
+        const std::string GREEN = "\033[32m";
+        const std::string YELLOW = "\033[33m";
+        const std::string RESET = "\033[0m";
+        
         std::cout << "\n" << player_name << "(you): " << your_piece << "    " 
                   << opponent_name << ": " << (your_piece == 'X' ? 'O' : 'X') << "\n";
+        
+        // 顯示棋子數量
+        std::cout << "X: " << black_count << "    O: " << white_count << "\n";
         
         if (is_your_turn) {
             std::cout << "now it's your turn.\n";
@@ -171,7 +181,16 @@ public:
         for (int i = 0; i < 8; i++) {
             std::cout << (8 - i) << " ";
             for (int j = 0; j < 8; j++) {
-                std::cout << board[i][j] << " ";
+                if (board[i][j] == 'X') {
+                    std::cout << RED << "X" << RESET << " ";
+                } else if (board[i][j] == 'O') {
+                    std::cout << GREEN << "O" << RESET << " ";
+                } else if (is_your_turn && is_valid_move(i, j, your_piece)) {
+                    // 顯示可下的位置
+                    std::cout << YELLOW << "+" << RESET << " ";
+                } else {
+                    std::cout << board[i][j] << " ";
+                }
             }
             std::cout << "\n";
         }
@@ -180,7 +199,7 @@ public:
     
     // 獲取棋盤狀態（用於網路傳輸）
     std::string get_board_state() {
-        std::stringstream ss; //沒看過的型態
+        std::stringstream ss;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 ss << board[i][j];

@@ -22,7 +22,6 @@ private:
     
     void send_message(int client_idx, const std::string& msg) {
         send(client_sockets[client_idx], msg.c_str(), msg.length(), 0);
-        std::cout << "[SEND to " << player_names[client_idx] << "] " << msg.substr(0, 60) << "\n";
     }
     
     std::string receive_message(int client_idx) {
@@ -31,9 +30,7 @@ private:
         if (valread <= 0) {
             return "";
         }
-        std::string msg(buffer);
-        std::cout << "[RECV from " << player_names[client_idx] << "] " << msg << "\n";
-        return msg;
+        return std::string(buffer);
     }
     
 public:

@@ -87,7 +87,7 @@ make clean
 ## 螢幕顯示範例
 
 ```
-Ariel(you): X    Bob: O
+Ariel(you): X :   Bob: O
 now it's your turn.
 8 * * * * * * * *
 7 * * * * * * * *
@@ -185,7 +185,3 @@ Ariel goes first!
 - [ ] 記錄遊戲歷史
 - [ ] 加入觀戰模式
 - [ ] 圖形化介面
-
-## 授權
-
-此專案為教育用途，可自由使用和修改。
