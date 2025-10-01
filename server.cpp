@@ -2,6 +2,7 @@
 #include <string>
 #include <cstring>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -22,6 +23,31 @@ private:
     
     void send_message(int client_idx, const std::string& msg) {
         send(client_sockets[client_idx], msg.c_str(), msg.length(), 0);
+    }
+    
+    // 檢查客戶端是否斷線（非阻塞檢查）
+    bool check_client_connected(int client_idx) {
+        fd_set read_fds;
+        struct timeval tv;
+        FD_ZERO(&read_fds);
+        FD_SET(client_sockets[client_idx], &read_fds);
+        
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+        
+        int result = select(client_sockets[client_idx] + 1, &read_fds, NULL, NULL, &tv);
+        
+        if (result > 0) {
+            // 有資料可讀，檢查是否是斷線
+            char buffer[1];
+            int n = recv(client_sockets[client_idx], buffer, 1, MSG_PEEK | MSG_DONTWAIT);
+            if (n == 0) {
+                // 連接已關閉
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     std::string receive_message(int client_idx) {
@@ -124,7 +150,17 @@ public:
         while (true) {
             int opponent = 1 - current_turn;
             
-            std::cout << "\n=== Turn: " << player_names[current_turn] << " ===\n";
+            // 檢查雙方連線狀態
+            if (!check_client_connected(current_turn)) {
+                std::cout << player_names[current_turn] << " disconnected\n";
+                send_message(opponent, "OPPONENT_DISCONNECT:");
+                break;
+            }
+            if (!check_client_connected(opponent)) {
+                std::cout << player_names[opponent] << " disconnected\n";
+                send_message(current_turn, "OPPONENT_DISCONNECT:");
+                break;
+            }
             
             if (!game->has_valid_moves(player_pieces[current_turn])) {
                 if (!game->has_valid_moves(player_pieces[opponent])) {
@@ -135,7 +171,7 @@ public:
                     std::cout << "Game over: " << result << "\n";
                     break;
                 } else {
-                    std::cout << player_names[current_turn] << " has no valid moves\n";
+                    std::cout << player_names[current_turn] << " has no valid moves, skipping...\n";
                     std::string skip_msg = "SKIP:" + game->get_board_state();
                     send_message(current_turn, skip_msg);
                     send_message(opponent, "OPPONENT_SKIP:" + game->get_board_state());
@@ -154,9 +190,21 @@ public:
             // 等待當前玩家的移動
             bool valid_move = false;
             while (!valid_move) {
+                // 再次檢查連線（在等待輸入時）
+                if (!check_client_connected(current_turn)) {
+                    std::cout << player_names[current_turn] << " disconnected\n";
+                    send_message(opponent, "OPPONENT_DISCONNECT:");
+                    return;
+                }
+                if (!check_client_connected(opponent)) {
+                    std::cout << player_names[opponent] << " disconnected\n";
+                    send_message(current_turn, "OPPONENT_DISCONNECT:");
+                    return;
+                }
+                
                 std::string move = receive_message(current_turn);
                 if (move.empty()) {
-                    std::cout << "Player disconnected\n";
+                    std::cout << player_names[current_turn] << " disconnected\n";
                     send_message(opponent, "OPPONENT_DISCONNECT:");
                     return;
                 }
@@ -173,7 +221,8 @@ public:
                 }
                 
                 game->make_move(row, col, player_pieces[current_turn]);
-                std::cout << player_names[current_turn] << " played " << move << "\n";
+                std::cout << player_names[current_turn] << " (" << player_pieces[current_turn] 
+                         << ") played " << move << "\n";
                 
                 // 發送 OK 給當前玩家
                 send_message(current_turn, "MOVE_OK:" + move);

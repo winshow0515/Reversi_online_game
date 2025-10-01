@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -45,15 +46,13 @@ private:
     void clear_screen() {
         // 嘗試多種清屏方式
         std::cout << "\033[2J";      // 清除整個螢幕
-        std::cout << "\033[3J";      // 清除 scrollback buffer
         std::cout << "\033[H";       // 移動游標到左上角
-        std::cout << "\033[0;0H";    // 另一種移動游標方式
-        std::cout << std::flush;
+        std::cout << "\033[3J";      // 清除 scrollback buffer
+        std::cout << "\r";           // 回到行首
+        std::cout << std::flush;     // 強制刷新輸出
         
-        // 如果上面都不行，用換行來推開舊內容
-        for (int i = 0; i < 3; i++) {
-            std::cout << "\n";
-        }
+        // 如果上面都不行，用傳統方法
+        system("clear");
     }
     
     void display_board(bool is_my_turn) {
