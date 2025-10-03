@@ -67,7 +67,7 @@ public:
         my_piece = ' ';
     }
     
-    ~Client() {
+    ~Client() {//解構子
         if (game) delete game;
         if (sock != -1) close(sock);
     }
@@ -81,7 +81,7 @@ public:
         
         struct sockaddr_in serv_addr;
         serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(server_port);
+        serv_addr.sin_port = htons(server_port); //htons: host to network short
         
         if (inet_pton(AF_INET, server_ip.c_str(), &serv_addr.sin_addr) <= 0) {
             std::cerr << "Invalid address\n";
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
     }
     
     std::string server_ip = argv[1];
-    int server_port = atoi(argv[2]);
+    int server_port = atoi(argv[2]);//atoi: ascii to integer
     
     Client client;
     if (!client.connect_to_server(server_ip, server_port)) {

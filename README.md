@@ -252,6 +252,7 @@ Game 類別（遊戲邏輯）
 
 #### C++ 的 socket 實作
 C++ 的 socket 實作比起 Python 更複雜，例如要自己設定 `socket FD`，我還因此去了解了 File descriptor。
+網路用的位元組順序是 Big-Endian 而電腦主機用的是 Little-Endian，所以需要 htons() 來轉換。
 
 #### .hpp
 `.hpp` 是標頭檔(header files)，用來存放程式碼的宣告，有了這個寫遊戲簡單多了
